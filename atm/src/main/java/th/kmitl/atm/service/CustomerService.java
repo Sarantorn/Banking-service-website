@@ -3,37 +3,42 @@ package th.kmitl.atm.service;
 import org.springframework.stereotype.Service;
 import th.kmitl.atm.model.Customer;
 import org.mindrot.jbcrypt.BCrypt;
+import th.kmitl.atm.model.CustomerRepository;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class CustomerService {
 
-    private List<Customer> customerList;
+    private CustomerRepository repository;
 
-    @PostConstruct
-    public void postConstruct(){
-      this.customerList = new ArrayList<>();
+    public CustomerService(CustomerRepository repository) {
+        this.repository = repository;
     }
 
     public void createCustomer(Customer customer){
         String hashPin = hash(customer.getPin());
         customer.setPin(hashPin);
-        customerList.add(customer);
+        repository.save(customer);
     }
 
+
+
     public List<Customer> getCustomers(){
-        return new ArrayList<>(this.customerList);
+        return repository.findAll();
     }
 
     public Customer findCustomer(int id) {
-        for (Customer customer : customerList) {
-            if (customer.getId() == id)
-                return customer;
+        try {
+            return repository.findById(id).get();
+        } catch (NoSuchElementException e) {
+            return null;
         }
-        return null;
+
+
     }
     public Customer checkPin(Customer inputCustomer) {
         // 1. หา customer ที่มี id ตรงกับพารามิเตอร์
